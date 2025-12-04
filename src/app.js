@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import userRouter from './users/routers/user.js';
 import friendRouter from './users/routers/friends.js';
+import chatRouter from './users/routers/chat.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(function (req, res, next) {
 });
 app.use(userRouter);
 app.use(friendRouter);
+app.use(chatRouter);
 
 const port = process.env.PORT;
 app.listen(port, () => {
