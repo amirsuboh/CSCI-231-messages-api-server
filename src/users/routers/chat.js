@@ -70,10 +70,6 @@ router.post("/chat/:chatId/invitation/:userId", auth, async (req, res) => {
     if (!receiver) return res.status(404).json({ error: "User to invite not found" });
 
     const invite = new ChatInvite({
-        chat: {
-            name: chat.groupName,
-            chatId: chat._id
-        },
         sender: {
             username: user.username,
             userId: user._id
@@ -81,6 +77,10 @@ router.post("/chat/:chatId/invitation/:userId", auth, async (req, res) => {
         receiver: {
             username: receiver.username,
             userId: receiver._id
+        },
+        chat: {
+            name: chat.groupName,
+            chatId: chat._id
         }
     });
 
@@ -92,6 +92,7 @@ router.post("/chat/:chatId/invitation/:userId", auth, async (req, res) => {
     // });
         
     // await chat.save();
+    // await invite.save();
     
     await receiver.save();
         
@@ -109,7 +110,7 @@ router.patch('/chat/:chatId/invitation/:requestId', auth, async (req, res) => {
     const index = user.requests.findIndex(item => item._id.equals(req.params.requestId));
     
     if (index === -1) {
-        return res.status(404).send()
+        return res.status(404).send();
     }
 
     const arr = user.requests.splice(index, 1); // remove 1 element at index
@@ -137,25 +138,28 @@ router.patch('/chat/:chatId/invitation/:requestId', auth, async (req, res) => {
             username: user.username,
             userId: user._id
         });
-
-        chat.users.forEach (async (u) => {
-            if (u.userId !== user._id){
-                let tempUser = User.findById(u.userId);
-                if (!tempUser) return res.status(404).json({error: "Updating user not found"})
-                let tempChat = tempUser.chatSessions.find(c => c.chatId === chat._id);
+        
+        
+        chat.users.forEach(async (u) => {
+            if (!u.userId.equals(user._id)){
+                let tempUser = await User.findById(u.userId);
+                if (!tempUser) return res.status(404).json({error: "Updating user not found"});
+                // console.log(tempUser);
+                let tempChat = tempUser.chatSessions.find(c => c.chatId.equals(chat._id));
                 if (!tempChat) return res.status(404).json({error: "Chat not found in user chatSessions"});
+                // console.log(tempChat);
                 tempChat.users = chat.users;
                 await tempUser.save();
             }
         });
-
+        
+        
         user.chatSessions.push({
             chatId: chat._id,
             users: chat.users,
             owner: chat.owner,
             groupName: chat.groupName
         });
-        
 
         await chat.save();
         await user.save();
