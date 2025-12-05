@@ -52,27 +52,30 @@ const userSchema = new Schema({
                 type: Schema.Types.ObjectId,
                 required: true
             },
-            users: [
-                {
-                    username: {
-                        type: String,
-                        required: true
-                    },
-                    userId : {
-                        type: Schema.Types.ObjectId,
-                        required: true
-                    }
-                }
-            ],
-            owner: {
-                username: String,
-                userId: Schema.Types.ObjectId
-            },
+            // users: [
+            //     {
+            //         username: {
+            //             type: String,
+            //             required: true
+            //         },
+            //         userId : {
+            //             type: Schema.Types.ObjectId,
+            //             required: true
+            //         }
+            //     }
+            // ],
+            // owner: {
+            //     username: String,
+            //     userId: Schema.Types.ObjectId
+            // },
             // chatType: {
             //     enum: ["direct", "group"],
             //     required: true
             // },
-            groupName: String
+            groupName: {
+                type: String,
+                required: true
+            }
         }
     ]
 });
