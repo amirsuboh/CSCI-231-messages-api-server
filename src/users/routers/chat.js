@@ -115,6 +115,10 @@ router.patch('/chat/:chatId/invitation/:requestId', auth, async (req, res) => {
     const arr = user.requests.splice(index, 1); // remove 1 element at index
     const request = arr[0];
 
+    if (!req.query || !Object.hasOwn(req.query, 'accept')) {
+        return res.status(400).send();
+    }
+
     if (req.query.accept === 'false') {
         try {
             await user.save()
@@ -134,49 +138,76 @@ router.patch('/chat/:chatId/invitation/:requestId', auth, async (req, res) => {
             userId: user._id
         });
 
+        chat.users.forEach (async (u) => {
+            if (u.userId !== user._id){
+                let tempUser = User.findById(u.userId);
+                if (!tempUser) return res.status(404).json({error: "Updating user not found"})
+                let tempChat = tempUser.chatSessions.find(c => c.chatId === chat._id);
+                if (!tempChat) return res.status(404).json({error: "Chat not found in user chatSessions"});
+                tempChat.users = chat.users;
+                await tempUser.save();
+            }
+        });
+
         user.chatSessions.push({
             chatId: chat._id,
             users: chat.users,
             owner: chat.owner,
             groupName: chat.groupName
         });
-
         
 
         await chat.save();
         await user.save();
     }
     catch (e){
-        return 
+        return res.status(500).send();
     }
 
-})
+});
 
-// router.delete("/chat/:chatId/membership", auth, async (req, res) => {
-//   try {
-//     const { chatId } = req.params;
-//     const { userId } = req.body;
+router.delete("/chat/:chatId/membership", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const user = req.user;
+    // const { userId } = req.body;
 
-//     if (!userId) return res.status(400).json({ error: "User ID required" });
+    // if (!userId) return res.status(400).json({ error: "User ID required" });
+    if (!user) return res.status(400).json({ error: "User not found" });
 
-//     const chat = await Chat.findById(chatId);
-//     if (!chat) return res.status(404).json({ error: "Chat not found" });
 
-//     const initialCount = chat.users.length;
-//     chat.users = chat.users.filter((u) => u.userId.toString() !== userId);
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ error: "Chat not found" });
 
-//     if (chat.users.length === initialCount) {
-//       return res
-//         .status(400)
-//         .json({ error: "User was not a member of this chat" });
-//     }
+    if (chat.owner.userId === user._id) return res.status(401).json({ error: "Owners cannot leave a chat"});
 
-//     await chat.save();
+    const initialCount = chat.users.length;
+    // chat.users = chat.users.filter((u) => u.userId.toString() !== userId);
+    chat.users = chat.users.filter((u) => u.userId === user._id);
 
-//     res.status(200).json({ message: "Successfully left the chat" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
+    if (chat.users.length === initialCount) {
+      return res
+        .status(400)
+        .json({ error: "User was not a member of this chat" });
+    }
+
+    user.chatSessions = user.chatSessions.filter(c => c.chatId === chat._id);
+
+    await chat.save();
+    await user.save();
+
+    res.status(200).json({ message: "Successfully left the chat" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// router.post('/chat/:chatId/message', auth, async (req, res) => {
+//     const user = req.user;
+//     const chat = Chat.findById(req.params.chatId);
+
+    
+
 // });
 
 // router.get("/chat/:chatId/messages?limit=#&oﬀset=#&search=string", auth, async (req, res) => {
