@@ -2,7 +2,6 @@ import Router from "express";
 import Chat from '../models/chat.js'
 import User from "../models/user.js";
 import ChatInvite from "../models/requests/ChatInvite.js";
-// import Message from "../models/Requests/message.js";
 import { auth } from "../../middleware/auth.js";
 
 const router = new Router();
@@ -230,13 +229,13 @@ router.delete("/chat/:chatId/membership", auth, async (req, res) => {
   }
 });
 
-// router.post('/chat/:chatId/message', auth, async (req, res) => {
-//     const user = req.user;
-//     const chat = Chat.findById(req.params.chatId);
+router.post('/chat/:chatId/message', auth, async (req, res) => {
+    const user = req.user;
+    const chat = Chat.findById(req.params.chatId);
 
     
 
-// });
+});
 
 // router.get("/chat/:chatId/messages?limit=#&oﬀset=#&search=string", auth, async (req, res) => {
 //    try {
