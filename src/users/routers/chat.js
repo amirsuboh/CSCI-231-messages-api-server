@@ -10,6 +10,11 @@ const router = new Router();
 router.post('/chat', auth, async (req, res) => {
     let creator = req.user;
 
+    let name = "New Chat";
+    if (req.body && req.body.groupName) {
+        name = req.body.groupName;
+    }
+
     const chat = new Chat({
         owner: {
             username: creator.username,
@@ -21,7 +26,7 @@ router.post('/chat', auth, async (req, res) => {
                 userId: creator._id
             }
         ],
-        groupName: req.body?.groupName ?? ""
+        groupName: name
     });
 
     creator.chatSessions.push({
