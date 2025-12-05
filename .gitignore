@@ -1,5 +1,5 @@
+node_modules/ 
 .env 
 .gitignore 
 package-lock.json
 specs/example.yaml
-/node_modules
