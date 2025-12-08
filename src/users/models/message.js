@@ -13,6 +13,8 @@ const messageSchema = new Schema({
         ref: 'User',
         required: true
     }
+}, {
+    timestamps: true
 });
 
 const Message = model('Message', messageSchema);

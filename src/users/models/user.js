@@ -2,7 +2,7 @@ import { model, Schema} from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import validator from 'validator';
-import Request from './requests/Request.js';
+import RequestModel from './requests/Request.js';
 
 const userSchema = new Schema({
     username: {
@@ -33,7 +33,7 @@ const userSchema = new Schema({
         }
     },
     authTokens: [String],
-    requests: [ Request.schema ],
+    requests: [ RequestModel.schema ],
     friends: [
         {
             username: {

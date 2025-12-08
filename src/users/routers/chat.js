@@ -98,7 +98,7 @@ router.post("/chat/:chatId/invitation/:userId", auth, async (req, res) => {
     // });
         
     // await chat.save();
-    // await invite.save();
+    await invite.save();
     
     await receiver.save();
         
@@ -265,6 +265,7 @@ router.post('/chat/:chatId/message', auth, async (req, res) => {
         recentBucket.endDate = message.timestamp;
         recentBucket.size += 1;
 
+        await message.save();
         await recentBucket.save();
         await chat.save();
         return res.status(201).send(message);
@@ -286,11 +287,10 @@ router.get("/chat/:chatId/messages", auth, async (req, res) => {
         query.content = { $regex: search, $options: "i" };
     }
 
-    const messages = await MessageBucket.find(query)
+    const messages = await Message.find(query)
       .sort({ createdAt: -1 })
       .skip(parseInt(offset))
-      .limit(parseInt(limit))
-      .populate("senderId", "username email");
+      .limit(parseInt(limit));
  
     const totalCount = await Message.countDocuments(query);
 

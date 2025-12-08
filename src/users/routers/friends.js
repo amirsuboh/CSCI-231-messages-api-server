@@ -27,8 +27,9 @@ router.post('/friend-request/:id', auth, async (req, res) => {
     receiver.requests.push(request)
 
     try {
-        await receiver.save()
-        res.send()
+        await request.save();
+        await receiver.save();
+        res.send(request)
     }
     catch (err) {
         console.log(err)

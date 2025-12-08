@@ -1,8 +1,8 @@
 import { Schema } from "mongoose";
-import Request from "./Request.js";
+import RequestModel from "./Request.js";
 
 const friendRequestSchema = new Schema({ });
 
-const FriendRequest = Request.discriminator('FriendRequest', friendRequestSchema);
+const FriendRequest = RequestModel.discriminator('FriendRequest', friendRequestSchema);
 
 export default FriendRequest;

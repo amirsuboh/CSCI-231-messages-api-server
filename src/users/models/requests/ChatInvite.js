@@ -1,5 +1,5 @@
 import { Schema } from "mongoose";
-import Request from "./Request.js";
+import RequestModel from "./Request.js";
 
 const chatInviteSchema = new Schema({ 
     chat: {
@@ -15,6 +15,6 @@ const chatInviteSchema = new Schema({
     }
 });
 
-const ChatInvite = Request.discriminator('ChatInvite', chatInviteSchema);
+const ChatInvite = RequestModel.discriminator('ChatInvite', chatInviteSchema);
 
 export default ChatInvite;

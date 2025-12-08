@@ -1,5 +1,5 @@
 import { model, Schema } from 'mongoose';
-import Message from './message';
+import Message from './message.js';
 
 const messageBucketSchema = new Schema({
     chatId: {

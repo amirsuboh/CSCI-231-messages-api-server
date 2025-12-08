@@ -27,6 +27,6 @@ const requestSchema = new Schema({
     discriminatorKey: 'kind'
 });
 
-const Request = model('Request', requestSchema);
+const RequestModel = model('RequestModel', requestSchema);
 
-export default Request;
+export default RequestModel;
