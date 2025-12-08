@@ -3,6 +3,8 @@ import Chat from '../models/chat.js'
 import User from "../models/user.js";
 import ChatInvite from "../models/requests/ChatInvite.js";
 import { auth } from "../../middleware/auth.js";
+import MessageBucket from "../models/message_bucket.js";
+import Message from "../models/message.js";
 
 const router = new Router();
 
@@ -38,7 +40,7 @@ router.post('/chat', auth, async (req, res) => {
     try {
         await creator.save();
         await chat.save();
-        res.send(chat);
+        res.status(201).send(chat);
     }
     catch (e){
         console.log(e);
@@ -144,20 +146,6 @@ router.patch('/chat/:chatId/invitation/:requestId', auth, async (req, res) => {
         });
         
         
-        // chat.users.forEach(async (u) => {
-        //     if (!u.userId.equals(user._id)){
-        //         let tempUser = await User.findById(u.userId);
-        //         if (!tempUser) return res.status(404).json({error: "Updating user not found"});
-        //         // console.log(tempUser);
-        //         let tempChat = tempUser.chatSessions.find(c => c.chatId.equals(chat._id));
-        //         if (!tempChat) return res.status(404).json({error: "Chat not found in user chatSessions"});
-        //         // console.log(tempChat);
-        //         tempChat.users = chat.users;
-        //         await tempUser.save();
-        //     }
-        // });
-        
-        
         user.chatSessions.push({
             chatId: chat._id,
             // users: chat.users,
@@ -231,41 +219,92 @@ router.delete("/chat/:chatId/membership", auth, async (req, res) => {
 
 router.post('/chat/:chatId/message', auth, async (req, res) => {
     const user = req.user;
-    const chat = Chat.findById(req.params.chatId);
+    const chat = await Chat.findById(req.params.chatId);
 
-    
+    if (!chat) return res.status(400).json({error: "Chat is not found"});
+
+    if (!req.body || !req.body.content) return res.status(400).json({error: "No message content found"});
+
+    try {
+
+        const message = new Message({
+            chatId: chat._id,
+            content: req.body.content,
+            timestamp: new Date(),
+            sender: user._id
+        });
+
+        let recentBucket;
+
+        let bucketsCount = chat.messageBuckets.length;
+
+        if (bucketsCount === 0){
+            recentBucket = new MessageBucket({
+                chatId: chat._id,
+                startDate: message.timestamp,
+                size: 0
+            });
+            chat.messageBuckets.push(recentBucket._id);
+        }
+        else {
+            let recentBucketId = chat.messageBuckets[chat.messageBuckets.length - 1];
+            recentBucket = await MessageBucket.findById(recentBucketId);
+        }
+
+
+        if (recentBucket.size === 10){
+            recentBucket = new MessageBucket({
+                chatId: chat._id,
+                startDate: message.timestamp,
+                size: 0
+            });
+            chat.messageBuckets.push(recentBucket._id);
+        }
+
+        recentBucket.messages.push(message);
+        recentBucket.endDate = message.timestamp;
+        recentBucket.size += 1;
+
+        await recentBucket.save();
+        await chat.save();
+        return res.status(201).send(message);
+    }
+    catch (e) {
+        return res.status(500).send();
+    }
 
 });
 
-// router.get("/chat/:chatId/messages?limit=#&oﬀset=#&search=string", auth, async (req, res) => {
-//    try {
-//     const { chatId } = req.params;
-//     const { limit = 20, offset = 0, search } = req.query;
-//     const query = { chatId: chatId };
+router.get("/chat/:chatId/messages", auth, async (req, res) => {
+   try {
+    const { chatId } = req.params;
+    const { limit = 10, offset = 0, search } = req.query;
+    const query = { chatId: chatId };
 
-//     if (search) {
-//       query.content = { $regex: search, $options: "i" };
-//     }
+    if (search) {
+        search = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        query.content = { $regex: search, $options: "i" };
+    }
 
-//     const messages = await Message.find(query)
-//       .sort({ createdAt: -1 })
-//       .skip(parseInt(offset))
-//       .limit(parseInt(limit))
-//       .populate("senderId", "username email");
+    const messages = await MessageBucket.find(query)
+      .sort({ createdAt: -1 })
+      .skip(parseInt(offset))
+      .limit(parseInt(limit))
+      .populate("senderId", "username email");
  
-//     const totalCount = await Message.countDocuments(query);
+    const totalCount = await Message.countDocuments(query);
 
-//     res.status(200).json({
-//       messages,
-//       pagination: {
-//         total: totalCount,
-//         limit: parseInt(limit),
-//         offset: parseInt(offset),
-//       },
-//     });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
+    res.status(200).json({
+      messages,
+      pagination: {
+        total: totalCount,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router;

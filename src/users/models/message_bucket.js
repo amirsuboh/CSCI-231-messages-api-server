@@ -1,23 +1,20 @@
 import { model, Schema } from 'mongoose';
+import Message from './message';
 
 const messageBucketSchema = new Schema({
+    chatId: {
+        type: Schema.Types.ObjectId,
+        ref: "Chat",
+        required: true
+    },
     startDate: Date,
     endDate: Date,
     size: {
         type: Number, 
-        required: true
+        required: true,
+        default: 0
     },
-    messages: [
-        {
-            content: String,
-            timestamp: Date,
-            sender: {
-                type: Schema.Types.ObjectId,
-                ref: 'User',
-                required: true
-            }
-        }
-    ]
+    messages: [Message.schema]
 });
 
 const MessageBucket = model('MessageBucket', messageBucketSchema);
