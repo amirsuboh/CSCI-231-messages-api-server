@@ -279,7 +279,7 @@ router.post('/chat/:chatId/message', auth, async (req, res) => {
 router.get("/chat/:chatId/messages", auth, async (req, res) => {
    try {
     const { chatId } = req.params;
-    const { limit = 10, offset = 0, search } = req.query;
+    let { limit = 10, offset = 0, search } = req.query;
     const query = { chatId: chatId };
 
     if (search) {
